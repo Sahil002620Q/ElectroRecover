@@ -3,11 +3,16 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
 # Database URL - Using asyncpg driver
-# For local: postgresql+asyncpg://user:password@localhost/dbname
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql+asyncpg://postgres:postgres@localhost/electronics_marketplace"
 )
+
+# Render provides postgres:// but we need postgresql+asyncpg:// for async operations
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+elif DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 # Create Async Engine
 engine = create_async_engine(DATABASE_URL, echo=True)
