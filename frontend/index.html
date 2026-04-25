@@ -20,6 +20,7 @@
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -30,6 +31,12 @@
                         'primary-dark': '#6d28d9', // Violet 700
                         'primary-light': '#8b5cf6', // Violet 500
                         secondary: '#475569',
+                        dark: {
+                            bg: '#0f172a',
+                            panel: '#1e293b',
+                            text: '#f8fafc',
+                            sub: '#94a3b8'
+                        }
                     },
                     animation: {
                         'float': 'float 3s ease-in-out infinite',
@@ -48,12 +55,23 @@
     <style>
         body {
             font-family: 'Outfit', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark {
+            background-color: #0f172a;
+            color: #f8fafc;
         }
 
         .glass-panel {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .dark .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .btn-animated {
@@ -69,6 +87,31 @@
 
         .btn-animated:active {
             transform: translateY(0);
+        }
+
+        /* Dark mode overrides for common components */
+        .dark .text-slate-600 { color: #94a3b8; }
+        .dark .text-slate-700 { color: #cbd5e1; }
+        .dark .text-slate-800 { color: #f1f5f9; }
+        .dark .text-slate-900 { color: #f8fafc; }
+        .dark .bg-white { background-color: #1e293b; }
+        .dark .bg-gray-50 { background-color: #0f172a; }
+        .dark .bg-slate-50 { background-color: #1e293b; }
+        .dark .bg-slate-100 { background-color: #334155; }
+        .dark .border-slate-100, .dark .border-slate-200, .dark .border-gray-200 { border-color: rgba(255,255,255,0.1); }
+        .dark input, .dark select, .dark textarea {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: rgba(255,255,255,0.1) !important;
+        }
+        .dark .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5); }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>

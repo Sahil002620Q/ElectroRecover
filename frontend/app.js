@@ -1,8 +1,13 @@
 const { useState, useEffect, createContext, useContext } = React;
 
 // --- API Configuration ---
+// Change this to your Render backend URL after deployment
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000'
+    : 'https://your-backend-name.onrender.com'; // User will replace this
+
 const api = axios.create({
-    baseURL: 'http://localhost:8000',
+    baseURL: API_BASE_URL,
 });
 
 // Add token to requests if available
@@ -69,98 +74,113 @@ const useAuth = () => useContext(AuthContext);
 
 // --- Components ---
 
-const Navbar = ({ setPage }) => {
+const Navbar = ({ setPage, darkMode, setDarkMode }) => {
     const { user, logout } = useAuth();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
         setPage('home');
-        setIsMenuOpen(false);
     };
 
     const navigate = (page) => {
         setPage(page);
-        setIsMenuOpen(false);
     };
 
     return (
         <nav className="glass-panel sticky top-0 z-50 shadow-sm border-b border-white/20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
+                {/* Main Header Row */}
+                <div className="flex justify-between h-16 items-center">
                     <div className="flex cursor-pointer items-center" onClick={() => navigate('home')}>
                         <span className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-dark">
                             ElectroRecover
                         </span>
                     </div>
 
-                    {/* Desktop Menu */}
-                    <div className="hidden md:flex items-center space-x-4">
-                        <button onClick={() => navigate('home')} className="text-slate-600 hover:text-primary font-medium transition-colors">Browse</button>
-                        {user ? (
-                            <>
-                                <button onClick={() => navigate('create-listing')} className="btn-animated bg-primary text-white px-5 py-2 rounded-full font-medium hover:bg-primary-dark shadow-lg shadow-primary/30">
-                                    + Sell
-                                </button>
-                                <button onClick={() => navigate('create-website-listing')} className="btn-animated bg-slate-900 text-white px-5 py-2 rounded-full font-medium hover:bg-slate-800 shadow-lg">
-                                    🌐 Website
-                                </button>
-                                <button onClick={() => navigate('dashboard')} className="text-slate-600 hover:text-primary font-medium transition-colors">Dashboard</button>
-                                <div className="flex items-center space-x-3 border-l pl-4 ml-4 border-slate-200">
-                                    <span className="text-sm font-medium text-slate-500">Hi, {user.name}</span>
-                                    <button onClick={handleLogout} className="text-sm text-red-500 hover:text-red-700 font-medium">Logout</button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <button onClick={() => navigate('login')} className="text-slate-600 hover:text-primary font-medium transition-colors">Login</button>
-                                <button onClick={() => navigate('register')} className="btn-animated bg-slate-900 text-white px-5 py-2 rounded-full font-medium hover:bg-slate-800 shadow-lg">
-                                    Register
-                                </button>
-                            </>
-                        )}
-                    </div>
+                    {/* Right side: User & Theme Toggle */}
+                    <div className="flex items-center space-x-2">
+                        {/* Mobile Settings Indicator */}
+                        <div className="md:hidden flex items-center space-x-1 mr-2 px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Settings</span>
+                        </div>
 
-                    {/* Mobile Menu Button */}
-                    <div className="md:hidden flex items-center">
-                        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-600 p-2 focus:outline-none">
-                            {isMenuOpen ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        {/* Theme Toggle */}
+                        <button 
+                            onClick={() => setDarkMode(!darkMode)}
+                            className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shadow-sm"
+                            title="Toggle Dark Mode"
+                        >
+                            {darkMode ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 18v1m9-9h1m-18 0h1m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0A9 9 0 115.636 5.636m12.728 12.728L5.636 5.636" />
                                 </svg>
                             ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                                 </svg>
                             )}
                         </button>
+
+                        <div className="hidden md:flex items-center space-x-4 border-l pl-4 border-slate-200">
+                            {user ? (
+                                <div className="flex items-center space-x-3">
+                                    <span className="text-sm font-medium text-slate-500">Hi, {user.name}</span>
+                                    <button onClick={handleLogout} className="text-sm text-red-500 hover:text-red-700 font-medium">Logout</button>
+                                </div>
+                            ) : (
+                                <button onClick={() => navigate('login')} className="text-slate-600 hover:text-primary font-medium transition-colors">Login</button>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Mobile Menu Content */}
-            {isMenuOpen && (
-                <div className="md:hidden bg-white border-b border-slate-100 p-4 space-y-4 shadow-xl">
-                    <button onClick={() => navigate('home')} className="block w-full text-left font-medium text-slate-600 py-2 hover:bg-slate-50 px-2 rounded-lg">Browse</button>
+                {/* Secondary Row (Action Buttons) - Visible Directly in Phone View & Desktop */}
+                <div className="flex items-center space-x-2 pb-3 overflow-x-auto no-scrollbar scroll-smooth">
+                    <button 
+                        onClick={() => navigate('home')} 
+                        className="flex-shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-1.5 rounded-full text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700 shadow-sm"
+                    >
+                        Browse
+                    </button>
+                    
                     {user ? (
                         <>
-                            <button onClick={() => navigate('create-listing')} className="block w-full text-left font-medium text-primary py-2 hover:bg-primary/5 px-2 rounded-lg">+ Sell Item</button>
-                            <button onClick={() => navigate('create-website-listing')} className="block w-full text-left font-medium text-slate-900 py-2 hover:bg-slate-50 px-2 rounded-lg">🌐 Sell Website</button>
-                            <button onClick={() => navigate('dashboard')} className="block w-full text-left font-medium text-slate-600 py-2 hover:bg-slate-50 px-2 rounded-lg">Dashboard</button>
-                            <div className="pt-4 border-t border-slate-100">
-                                <p className="text-xs text-slate-400 mb-2 px-2 uppercase font-bold tracking-wider">Account</p>
-                                <p className="text-sm text-slate-700 mb-3 px-2">Signed in as <span className="font-bold">{user.name}</span></p>
-                                <button onClick={handleLogout} className="block w-full text-left font-medium text-red-500 py-2 hover:bg-red-50 px-2 rounded-lg">Logout</button>
-                            </div>
+                            <button 
+                                onClick={() => navigate('create-listing')} 
+                                className="flex-shrink-0 bg-primary text-white px-4 py-1.5 rounded-full text-sm font-bold hover:bg-primary-dark shadow-md shadow-primary/20 transition-all"
+                            >
+                                + Sell Item
+                            </button>
+                            <button 
+                                onClick={() => navigate('create-website-listing')} 
+                                className="flex-shrink-0 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white px-4 py-1.5 rounded-full text-sm font-bold hover:bg-slate-800 dark:hover:bg-white transition-all shadow-md"
+                            >
+                                🌐 Website
+                            </button>
+                            <button 
+                                onClick={() => navigate('dashboard')} 
+                                className="flex-shrink-0 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-4 py-1.5 rounded-full text-sm font-bold hover:bg-slate-50 transition-all shadow-sm"
+                            >
+                                Dashboard
+                            </button>
+                            <button onClick={handleLogout} className="md:hidden flex-shrink-0 text-red-500 px-4 py-1.5 rounded-full text-sm font-bold hover:bg-red-50 transition-all border border-red-100">
+                                Logout
+                            </button>
                         </>
                     ) : (
-                        <>
-                            <button onClick={() => navigate('login')} className="block w-full text-left font-medium text-slate-600 py-2 hover:bg-slate-50 px-2 rounded-lg">Login</button>
-                            <button onClick={() => navigate('register')} className="block w-full text-left font-medium text-slate-900 py-2 hover:bg-slate-50 px-2 rounded-lg">Register Account</button>
-                        </>
+                        <button 
+                            onClick={() => navigate('register')} 
+                            className="flex-shrink-0 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white px-4 py-1.5 rounded-full text-sm font-bold hover:bg-slate-800 dark:hover:bg-white transition-all shadow-md"
+                        >
+                            Register
+                        </button>
                     )}
                 </div>
-            )}
+            </div>
         </nav>
     );
 };
@@ -1019,11 +1039,22 @@ const DashboardPage = () => {
 
 const App = () => {
     const [page, setPage] = useState('home');
+    const [darkMode, setDarkMode] = useState(localStorage.getItem('theme') === 'dark');
+
+    useEffect(() => {
+        if (darkMode) {
+            document.body.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.body.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        }
+    }, [darkMode]);
 
     return (
         <AuthProvider>
-            <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
-                <Navbar setPage={setPage} />
+            <div className="min-h-screen bg-gray-50 dark:bg-dark-bg text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
+                <Navbar setPage={setPage} darkMode={darkMode} setDarkMode={setDarkMode} />
                 <main>
                     {page === 'home' && <HomePage setPage={setPage} />}
                     {page === 'login' && <LoginPage setPage={setPage} />}
