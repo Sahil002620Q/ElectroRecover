@@ -59,6 +59,13 @@ class Listing(Base):
     location = Column(String, nullable=False)
     status = Column(Enum(ListingStatus), default=ListingStatus.ACTIVE)
     photos = Column(ARRAY(String), nullable=True)
+    
+    # Website specific fields
+    website_url = Column(String, nullable=True)
+    monthly_revenue = Column(Float, nullable=True)
+    monthly_traffic = Column(Integer, nullable=True)
+    tech_stack = Column(String, nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships

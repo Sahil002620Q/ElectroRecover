@@ -16,7 +16,7 @@ STATIC_DIR = os.path.join(os.path.dirname(BASE_DIR), "frontend")
 
 # Database Init
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=10)
     c = conn.cursor()
     c.executescript('''
         CREATE TABLE IF NOT EXISTS users (
@@ -43,6 +43,10 @@ def init_db():
             working_parts TEXT,
             photos TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            website_url TEXT,
+            monthly_revenue REAL,
+            monthly_traffic INTEGER,
+            tech_stack TEXT,
             FOREIGN KEY(seller_id) REFERENCES users(id)
         );
         CREATE TABLE IF NOT EXISTS buy_requests (
@@ -51,6 +55,7 @@ def init_db():
             buyer_id INTEGER,
             seller_id INTEGER,
             status TEXT DEFAULT 'pending',
+            commission_status TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(listing_id) REFERENCES listings(id)
         );
@@ -62,6 +67,13 @@ def init_db():
     except sqlite3.OperationalError:
         pass # Column likely exists
 
+    # Migration: Add website columns if they don't exist
+    for col in [("website_url", "TEXT"), ("monthly_revenue", "REAL"), ("monthly_traffic", "INTEGER"), ("tech_stack", "TEXT")]:
+        try:
+            c.execute(f"ALTER TABLE listings ADD COLUMN {col[0]} {col[1]}")
+        except sqlite3.OperationalError:
+            pass # Column likely exists
+
     # Check if admin exists
     c.execute("SELECT id FROM users WHERE role='admin'")
     if not c.fetchone():
@@ -71,6 +83,13 @@ def init_db():
                   ("Administrator", "admin@example.com", pwd_hash, "admin", "HQ", "0000000000"))
         print("Default admin created: admin@example.com / admin123")
     
+    # Migration: Add commission_status if it doesn't exist
+    try:
+        c.execute("ALTER TABLE buy_requests ADD COLUMN commission_status TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    c.execute("PRAGMA journal_mode=WAL")
     conn.commit()
     conn.close()
 
@@ -123,10 +142,25 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
 
         # API: Get Listings
         if path == "/listings/":
-            conn = sqlite3.connect(DB_FILE)
+            query_params = parse_qs(parsed.query)
+            category = query_params.get('category', [None])[0]
+            condition = query_params.get('condition', [None])[0]
+            
+            conn = sqlite3.connect(DB_FILE, timeout=10)
             conn.row_factory = sqlite3.Row
             c = conn.cursor()
-            c.execute("SELECT * FROM listings ORDER BY created_at DESC")
+            
+            sql = "SELECT * FROM listings WHERE 1=1"
+            params = []
+            if category:
+                sql += " AND category LIKE ?"
+                params.append(f"%{category}%")
+            if condition:
+                sql += " AND condition = ?"
+                params.append(condition)
+                
+            sql += " ORDER BY created_at DESC"
+            c.execute(sql, params)
             listings = [dict(row) for row in c.fetchall()]
             # Add photos array (fake for now or parsed)
             for l in listings:
@@ -139,7 +173,7 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
         if path == "/requests/my-requests":
             user = self.get_user_from_token()
             if not user: return
-            conn = sqlite3.connect(DB_FILE)
+            conn = sqlite3.connect(DB_FILE, timeout=10)
             conn.row_factory = sqlite3.Row
             c = conn.cursor()
             c.execute("SELECT * FROM buy_requests WHERE buyer_id=?", (user['id'],))
@@ -152,7 +186,7 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
         if path == "/requests/incoming":
             user = self.get_user_from_token()
             if not user: return
-            conn = sqlite3.connect(DB_FILE)
+            conn = sqlite3.connect(DB_FILE, timeout=10)
             conn.row_factory = sqlite3.Row
             c = conn.cursor()
             # Join with users to get buyer info
@@ -185,7 +219,7 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
 
             # API: Login
             if path == "/auth/login":
-                conn = sqlite3.connect(DB_FILE)
+                conn = sqlite3.connect(DB_FILE, timeout=10)
                 conn.row_factory = sqlite3.Row
                 c = conn.cursor()
                 pwd_hash = hashlib.sha256(body['password'].encode()).hexdigest()
@@ -204,7 +238,7 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
 
             # API: Register
             if path == "/auth/register":
-                conn = sqlite3.connect(DB_FILE)
+                conn = sqlite3.connect(DB_FILE, timeout=10)
                 c = conn.cursor()
                 pwd_hash = hashlib.sha256(body['password'].encode()).hexdigest()
                 try:
@@ -226,13 +260,14 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
             if path == "/listings/":
                 user = self.get_user_from_token()
                 if not user: return
-                conn = sqlite3.connect(DB_FILE)
+                conn = sqlite3.connect(DB_FILE, timeout=10)
                 c = conn.cursor()
-                c.execute('''INSERT INTO listings (seller_id, title, category, brand, model, condition, price, location, description, working_parts, photos)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                          (user['id'], body['title'], body['category'], body['brand'], body['model'], 
-                           body['condition'], body['price'], body['location'], body['description'], 
-                           body['working_parts'], json.dumps(body['photos'])))
+                c.execute('''INSERT INTO listings (seller_id, title, category, brand, model, condition, price, location, description, working_parts, photos, website_url, monthly_revenue, monthly_traffic, tech_stack)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                          (user['id'], body.get('title'), body.get('category'), body.get('brand'), body.get('model'), 
+                           body.get('condition'), body.get('price'), body.get('location'), body.get('description'), 
+                           body.get('working_parts'), json.dumps(body.get('photos', [])),
+                           body.get('website_url'), body.get('monthly_revenue'), body.get('monthly_traffic'), body.get('tech_stack')))
                 conn.commit()
                 lid = c.lastrowid
                 conn.close()
@@ -243,7 +278,7 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
             if path == "/requests/":
                 user = self.get_user_from_token()
                 if not user: return
-                conn = sqlite3.connect(DB_FILE)
+                conn = sqlite3.connect(DB_FILE, timeout=10)
                 c = conn.cursor()
                 c.execute("SELECT seller_id FROM listings WHERE id=?", (body['listing_id'],))
                 listing = c.fetchone()
@@ -277,7 +312,7 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
             
             status = "accepted" if action == "accept" else "rejected"
             
-            conn = sqlite3.connect(DB_FILE)
+            conn = sqlite3.connect(DB_FILE, timeout=10)
             c = conn.cursor()
             c.execute("UPDATE buy_requests SET status=? WHERE id=?", (status, req_id))
             conn.commit()
@@ -299,7 +334,7 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
         token = auth_header.split(" ")[1]
         try:
             user_id = int(token.split(":")[0])
-            conn = sqlite3.connect(DB_FILE)
+            conn = sqlite3.connect(DB_FILE, timeout=10)
             conn.row_factory = sqlite3.Row
             c = conn.cursor()
             c.execute("SELECT * FROM users WHERE id=?", (user_id,))

@@ -71,47 +71,101 @@ const useAuth = () => useContext(AuthContext);
 
 const Navbar = ({ setPage }) => {
     const { user, logout } = useAuth();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const handleLogout = () => {
+        logout();
+        setPage('home');
+        setIsMenuOpen(false);
+    };
+
+    const navigate = (page) => {
+        setPage(page);
+        setIsMenuOpen(false);
+    };
+
     return (
         <nav className="glass-panel sticky top-0 z-50 shadow-sm border-b border-white/20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
-                    <div className="flex cursor-pointer items-center" onClick={() => setPage('home')}>
-                        <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-dark">
+                    <div className="flex cursor-pointer items-center" onClick={() => navigate('home')}>
+                        <span className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-dark">
                             ElectroRecover
                         </span>
                     </div>
-                    <div className="flex items-center space-x-4">
-                        <button onClick={() => setPage('home')} className="text-slate-600 hover:text-primary font-medium transition-colors">Browse</button>
+
+                    {/* Desktop Menu */}
+                    <div className="hidden md:flex items-center space-x-4">
+                        <button onClick={() => navigate('home')} className="text-slate-600 hover:text-primary font-medium transition-colors">Browse</button>
                         {user ? (
                             <>
-                                <button onClick={() => setPage('create-listing')} className="btn-animated bg-primary text-white px-5 py-2 rounded-full font-medium hover:bg-primary-dark shadow-lg shadow-primary/30">
-                                    + Sell Item
+                                <button onClick={() => navigate('create-listing')} className="btn-animated bg-primary text-white px-5 py-2 rounded-full font-medium hover:bg-primary-dark shadow-lg shadow-primary/30">
+                                    + Sell
                                 </button>
-                                <button onClick={() => setPage('dashboard')} className="text-slate-600 hover:text-primary font-medium transition-colors">Dashboard</button>
-                                {user.role === 'admin' && (
-                                    <button onClick={() => setPage('admin')} className="text-purple-600 hover:text-purple-800 font-bold">Admin</button>
-                                )}
+                                <button onClick={() => navigate('create-website-listing')} className="btn-animated bg-slate-900 text-white px-5 py-2 rounded-full font-medium hover:bg-slate-800 shadow-lg">
+                                    🌐 Website
+                                </button>
+                                <button onClick={() => navigate('dashboard')} className="text-slate-600 hover:text-primary font-medium transition-colors">Dashboard</button>
                                 <div className="flex items-center space-x-3 border-l pl-4 ml-4 border-slate-200">
                                     <span className="text-sm font-medium text-slate-500">Hi, {user.name}</span>
-                                    <button onClick={logout} className="text-sm text-red-500 hover:text-red-700 font-medium">Logout</button>
+                                    <button onClick={handleLogout} className="text-sm text-red-500 hover:text-red-700 font-medium">Logout</button>
                                 </div>
                             </>
                         ) : (
                             <>
-                                <button onClick={() => setPage('login')} className="text-slate-600 hover:text-primary font-medium transition-colors">Login</button>
-                                <button onClick={() => setPage('register')} className="btn-animated bg-slate-900 text-white px-5 py-2 rounded-full font-medium hover:bg-slate-800 shadow-lg">
+                                <button onClick={() => navigate('login')} className="text-slate-600 hover:text-primary font-medium transition-colors">Login</button>
+                                <button onClick={() => navigate('register')} className="btn-animated bg-slate-900 text-white px-5 py-2 rounded-full font-medium hover:bg-slate-800 shadow-lg">
                                     Register
                                 </button>
                             </>
                         )}
                     </div>
+
+                    {/* Mobile Menu Button */}
+                    <div className="md:hidden flex items-center">
+                        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-600 p-2 focus:outline-none">
+                            {isMenuOpen ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                                </svg>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {/* Mobile Menu Content */}
+            {isMenuOpen && (
+                <div className="md:hidden bg-white border-b border-slate-100 p-4 space-y-4 shadow-xl">
+                    <button onClick={() => navigate('home')} className="block w-full text-left font-medium text-slate-600 py-2 hover:bg-slate-50 px-2 rounded-lg">Browse</button>
+                    {user ? (
+                        <>
+                            <button onClick={() => navigate('create-listing')} className="block w-full text-left font-medium text-primary py-2 hover:bg-primary/5 px-2 rounded-lg">+ Sell Item</button>
+                            <button onClick={() => navigate('create-website-listing')} className="block w-full text-left font-medium text-slate-900 py-2 hover:bg-slate-50 px-2 rounded-lg">🌐 Sell Website</button>
+                            <button onClick={() => navigate('dashboard')} className="block w-full text-left font-medium text-slate-600 py-2 hover:bg-slate-50 px-2 rounded-lg">Dashboard</button>
+                            <div className="pt-4 border-t border-slate-100">
+                                <p className="text-xs text-slate-400 mb-2 px-2 uppercase font-bold tracking-wider">Account</p>
+                                <p className="text-sm text-slate-700 mb-3 px-2">Signed in as <span className="font-bold">{user.name}</span></p>
+                                <button onClick={handleLogout} className="block w-full text-left font-medium text-red-500 py-2 hover:bg-red-50 px-2 rounded-lg">Logout</button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <button onClick={() => navigate('login')} className="block w-full text-left font-medium text-slate-600 py-2 hover:bg-slate-50 px-2 rounded-lg">Login</button>
+                            <button onClick={() => navigate('register')} className="block w-full text-left font-medium text-slate-900 py-2 hover:bg-slate-50 px-2 rounded-lg">Register Account</button>
+                        </>
+                    )}
+                </div>
+            )}
         </nav>
     );
 };
 
-const ListingCard = ({ listing, onRequest }) => {
+const ListingCard = ({ listing, onRequest, isRequested }) => {
     return (
         <div className="btn-animated bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl group">
             <div className="h-48 bg-slate-100 flex items-center justify-center relative overflow-hidden">
@@ -138,15 +192,35 @@ const ListingCard = ({ listing, onRequest }) => {
                 </div>
 
                 <h3 className="text-lg font-bold text-slate-800 mb-1 group-hover:text-primary transition-colors">{listing.title}</h3>
-                <p className="text-sm text-slate-500 mb-4">{listing.brand} • {listing.model}</p>
+
+                {listing.category.toLowerCase().includes('website') ? (
+                    <div className="space-y-2 mb-4">
+                        <div className="flex items-center text-sm">
+                            <span className="text-slate-400 w-24">URL:</span>
+                            <span className="text-primary font-medium truncate">{listing.website_url || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                            <span className="text-slate-400 w-24">Revenue:</span>
+                            <span className="text-green-600 font-bold">${listing.monthly_revenue}/mo</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                            <span className="text-slate-400 w-24">Traffic:</span>
+                            <span className="text-slate-600 font-medium">{listing.monthly_traffic?.toLocaleString()} visits/mo</span>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="text-sm text-slate-500 mb-4">{listing.brand} • {listing.model}</p>
+                )}
 
                 <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm">
-                        <span className="text-slate-400 w-20">Condition:</span>
-                        <span className={`font-medium ${listing.condition === 'broken' ? 'text-red-500' : 'text-green-500'}`}>
-                            {listing.condition.replace('_', ' ').toUpperCase()}
-                        </span>
-                    </div>
+                    {!listing.category.toLowerCase().includes('website') && (
+                        <div className="flex items-center text-sm">
+                            <span className="text-slate-400 w-20">Condition:</span>
+                            <span className={`font-medium ${listing.condition === 'broken' ? 'text-red-500' : 'text-green-500'}`}>
+                                {listing.condition.replace('_', ' ').toUpperCase()}
+                            </span>
+                        </div>
+                    )}
                     <div className="flex items-center text-sm">
                         <span className="text-slate-400 w-20">Location:</span>
                         <span className="text-slate-600 truncate">{listing.location}</span>
@@ -155,10 +229,18 @@ const ListingCard = ({ listing, onRequest }) => {
 
                 {listing.status === 'active' && (
                     <button
-                        onClick={() => onRequest(listing.id)}
-                        className="w-full btn-animated py-2.5 rounded-xl border-2 border-primary text-primary font-bold hover:bg-primary hover:text-white transition-all"
+                        onClick={() => !isRequested && onRequest(listing.id)}
+                        disabled={isRequested}
+                        className={`w-full btn-animated py-2.5 rounded-xl border-2 font-bold transition-all ${isRequested 
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                            : listing.category.toLowerCase().includes('website')
+                                ? 'border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white'
+                                : 'border-primary text-primary hover:bg-primary hover:text-white'
+                            }`}
                     >
-                        Request to Buy
+                        {isRequested 
+                            ? '✓ Request Sent' 
+                            : (listing.category.toLowerCase().includes('website') ? 'Get Ownership' : 'Request to Buy')}
                     </button>
                 )}
             </div>
@@ -171,6 +253,7 @@ const ListingCard = ({ listing, onRequest }) => {
 const HomePage = ({ setPage }) => {
     const [listings, setListings] = useState([]);
     const [filters, setFilters] = useState({ category: '', condition: '' });
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     useEffect(() => {
         fetchListings();
@@ -189,66 +272,134 @@ const HomePage = ({ setPage }) => {
         }
     };
 
+    const [requestedIds, setRequestedIds] = useState(new Set());
+
     const handleBuyRequest = async (listingId) => {
         try {
-            await api.post('/requests/', { listing_id: listingId });
-            alert("Buy request sent successfully! Check your dashboard.");
+            const res = await api.post('/requests/', { listing_id: listingId });
+            console.log("Request created:", res.data);
+            setRequestedIds(prev => new Set([...prev, listingId]));
+            alert("SUCCESS: Your request has been sent! Check the Dashboard to track it.");
         } catch (err) {
-            alert(err.response?.data?.detail || "Failed to send request. You might need to login.");
+            const errorMsg = err.response?.data?.detail || "Failed to send request. You might need to login.";
+            alert(errorMsg);
             if (err.response?.status === 401) setPage('login');
         }
     };
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex gap-8">
-                {/* Sidebar Filters */}
-                <div className="w-64 flex-shrink-0">
-                    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                        <h3 className="font-semibold text-gray-900 mb-4">Filters</h3>
-
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            <input
-                                type="text"
-                                className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
-                                placeholder="e.g. Phone, Laptop"
-                                value={filters.category}
-                                onChange={e => setFilters({ ...filters, category: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Condition</label>
-                            <select
-                                className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
-                                value={filters.condition}
-                                onChange={e => setFilters({ ...filters, condition: e.target.value })}
-                            >
-                                <option value="">All</option>
-                                <option value="broken">Broken</option>
-                                <option value="for_parts">For Parts</option>
-                                <option value="used">Used</option>
-                                <option value="new">New</option>
-                            </select>
-                        </div>
-                    </div>
+            <div className="flex justify-between items-center mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900">Explore Marketplace</h1>
+                    <p className="text-slate-500 mt-1">Find the best deals on broken electronics and websites</p>
                 </div>
-
-                {/* Listing Grid */}
-                <div className="flex-1">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {listings.map(listing => (
-                            <ListingCard key={listing.id} listing={listing} onRequest={handleBuyRequest} />
-                        ))}
-                    </div>
-                    {listings.length === 0 && (
-                        <div className="text-center py-12 text-gray-500">
-                            No listings found matching your criteria.
-                        </div>
+                
+                <button 
+                    onClick={() => setIsFilterOpen(true)}
+                    className="flex items-center space-x-2 bg-white border border-slate-200 px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all font-semibold text-slate-700"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    <span>Filters</span>
+                    {(filters.category || filters.condition) && (
+                        <span className="bg-primary text-white text-[10px] h-5 w-5 flex items-center justify-center rounded-full">
+                            !
+                        </span>
                     )}
-                </div>
+                </button>
             </div>
+
+            {/* Filter Modal */}
+            {isFilterOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsFilterOpen(false)}></div>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-slate-900">Filter Listings</h3>
+                            <button onClick={() => setIsFilterOpen(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="space-y-5">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Category</label>
+                                <input
+                                    type="text"
+                                    className="w-full border-slate-200 rounded-xl shadow-sm p-3 border focus:ring-primary focus:border-primary transition-all"
+                                    placeholder="e.g. Phone, Laptop, Website"
+                                    value={filters.category}
+                                    onChange={e => setFilters({ ...filters, category: e.target.value })}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Condition</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['', 'broken', 'for_parts', 'used', 'new'].map(cond => (
+                                        <button
+                                            key={cond}
+                                            onClick={() => setFilters({ ...filters, condition: cond })}
+                                            className={`py-2 px-3 rounded-lg text-sm font-medium border transition-all ${filters.condition === cond 
+                                                ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' 
+                                                : 'bg-white border-slate-200 text-slate-600 hover:border-primary/30'}`}
+                                        >
+                                            {cond === '' ? 'All Conditions' : cond.replace('_', ' ').toUpperCase()}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="pt-4 flex space-x-3">
+                                <button 
+                                    onClick={() => {
+                                        setFilters({ category: '', condition: '' });
+                                        setIsFilterOpen(false);
+                                    }}
+                                    className="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all"
+                                >
+                                    Reset
+                                </button>
+                                <button 
+                                    onClick={() => setIsFilterOpen(false)}
+                                    className="flex-1 py-3 px-4 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark shadow-lg shadow-primary/30 transition-all"
+                                >
+                                    Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {listings.map(listing => (
+                    <ListingCard 
+                        key={listing.id} 
+                        listing={listing} 
+                        onRequest={handleBuyRequest}
+                        isRequested={requestedIds.has(listing.id)}
+                    />
+                ))}
+            </div>
+            
+            {listings.length === 0 && (
+                <div className="text-center py-24 bg-white rounded-3xl border border-dashed border-slate-200">
+                    <div className="text-5xl mb-4">🔍</div>
+                    <h3 className="text-xl font-bold text-slate-800">No listings found</h3>
+                    <p className="text-slate-500 mt-2">Try adjusting your filters to find what you're looking for.</p>
+                    <button 
+                        onClick={() => setFilters({ category: '', condition: '' })}
+                        className="mt-6 text-primary font-bold hover:underline"
+                    >
+                        Clear all filters
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
@@ -504,6 +655,111 @@ const CreateListingPage = ({ setPage }) => {
     );
 };
 
+const CreateWebsiteListingPage = ({ setPage }) => {
+    const [formData, setFormData] = useState({
+        title: '', category: 'Website', website_url: '',
+        monthly_revenue: '', monthly_traffic: '', tech_stack: '',
+        price: '', location: '', description: ''
+    });
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post('/listings/', {
+                ...formData,
+                price: parseFloat(formData.price),
+                monthly_revenue: parseFloat(formData.monthly_revenue),
+                monthly_traffic: parseInt(formData.monthly_traffic),
+                condition: 'used', // Default for websites
+                photos: []
+            });
+            alert('Website listing created!');
+            setPage('dashboard');
+        } catch (err) {
+            alert('Failed to create listing: ' + (err.response?.data?.detail || err.message));
+        }
+    };
+
+    return (
+        <div className="max-w-2xl mx-auto py-8 px-4">
+            <div className="mb-8 text-center">
+                <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Sell Your Website</h1>
+                <p className="text-slate-500">Reach thousands of potential investors and buyers.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="glass-panel p-8 rounded-2xl shadow-xl border border-white/50 space-y-6">
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Website Title</label>
+                    <input type="text" required className="w-full rounded-xl border-gray-200 shadow-sm p-3 focus:ring-primary focus:border-primary border"
+                        placeholder="Premium E-commerce Store (Niche: Tech)"
+                        value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Website URL</label>
+                        <input type="url" required className="w-full rounded-xl border-gray-200 shadow-sm p-3 focus:ring-primary focus:border-primary border"
+                            placeholder="https://example.com"
+                            value={formData.website_url} onChange={e => setFormData({ ...formData, website_url: e.target.value })} />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Tech Stack</label>
+                        <input type="text" className="w-full rounded-xl border-gray-200 shadow-sm p-3 focus:ring-primary focus:border-primary border"
+                            placeholder="Next.js, Tailwind, Supabase"
+                            value={formData.tech_stack} onChange={e => setFormData({ ...formData, tech_stack: e.target.value })} />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Monthly Revenue ($)</label>
+                        <input type="number" required className="w-full rounded-xl border-gray-200 shadow-sm p-3 focus:ring-primary focus:border-primary border"
+                            placeholder="1500"
+                            value={formData.monthly_revenue} onChange={e => setFormData({ ...formData, monthly_revenue: e.target.value })} />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Monthly Traffic (Visits)</label>
+                        <input type="number" required className="w-full rounded-xl border-gray-200 shadow-sm p-3 focus:ring-primary focus:border-primary border"
+                            placeholder="25000"
+                            value={formData.monthly_traffic} onChange={e => setFormData({ ...formData, monthly_traffic: e.target.value })} />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Description & Revenue Proof</label>
+                    <textarea required className="w-full rounded-xl border-gray-200 shadow-sm p-3 focus:ring-primary focus:border-primary border h-32"
+                        placeholder="Describe your business model, growth potential, and why you are selling..."
+                        value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Asking Price ($)</label>
+                        <input type="number" step="0.01" required className="w-full rounded-xl border-gray-200 shadow-sm p-3 focus:ring-primary focus:border-primary border"
+                            placeholder="50000.00"
+                            value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Seller Location</label>
+                        <input type="text" required className="w-full rounded-xl border-gray-200 shadow-sm p-3 focus:ring-primary focus:border-primary border"
+                            placeholder="Remote / Global"
+                            value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} />
+                    </div>
+                </div>
+
+                <div className="pt-4 space-y-3">
+                    <button type="submit" className="w-full btn-animated bg-slate-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-slate-800 shadow-xl">
+                        List Website for Sale
+                    </button>
+                    <button type="button" onClick={() => setPage('home')} className="w-full text-slate-500 py-2 hover:text-slate-800 font-medium transition-colors">
+                        Cancel and Go Back
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+};
+
 const DashboardPage = () => {
     const { user } = useAuth();
     const [myListings, setMyListings] = useState([]);
@@ -559,7 +815,7 @@ const DashboardPage = () => {
                 {/* Incoming Requests (As Seller) */}
                 <div className="glass-panel p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h2 className="text-xl font-bold mb-4 text-slate-800 flex items-center">
-                        <span className="mr-2">📥</span> Incoming Buy Requests
+                        <span className="mr-2"></span> Incoming Buy Requests
                     </h2>
                     {incomingRequests.length === 0 ? (
                         <p className="text-slate-500 italic">No incoming requests yet.</p>
@@ -621,7 +877,7 @@ const DashboardPage = () => {
                 {/* Sent Requests (As Buyer) */}
                 <div className="glass-panel p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h2 className="text-xl font-bold mb-4 text-slate-800 flex items-center">
-                        <span className="mr-2">📤</span> My Sent Requests
+                        <span className="mr-2"></span> My Sent Requests
                     </h2>
                     {sentRequests.length === 0 ? (
                         <p className="text-slate-500 italic">You haven't made any requests.</p>
@@ -680,6 +936,7 @@ const App = () => {
                     {page === 'login' && <LoginPage setPage={setPage} />}
                     {page === 'register' && <RegisterPage setPage={setPage} />}
                     {page === 'create-listing' && <CreateListingPage setPage={setPage} />}
+                    {page === 'create-website-listing' && <CreateWebsiteListingPage setPage={setPage} />}
                     {page === 'dashboard' && <DashboardPage />}
                 </main>
             </div>

@@ -38,6 +38,12 @@ class ListingBase(BaseModel):
     price: float
     location: str
     photos: Optional[List[str]] = []
+    
+    # Website specific fields
+    website_url: Optional[str] = None
+    monthly_revenue: Optional[float] = None
+    monthly_traffic: Optional[int] = None
+    tech_stack: Optional[str] = None
 
 class ListingCreate(ListingBase):
     pass
