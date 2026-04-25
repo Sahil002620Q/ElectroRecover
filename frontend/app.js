@@ -829,6 +829,30 @@ const DashboardPage = () => {
         }
     };
 
+    const handleDeleteListing = async (listingId) => {
+        if (!confirm("Are you sure you want to delete this listing? This action cannot be undone.")) return;
+        try {
+            await api.delete(`/listings/${listingId}`);
+            loadDashboardData();
+        } catch (err) {
+            alert("Failed to delete listing");
+        }
+    };
+
+    const [editingListing, setEditingListing] = useState(null);
+
+    const handleUpdateListing = async (e) => {
+        e.preventDefault();
+        try {
+            await api.put(`/listings/${editingListing.id}`, editingListing);
+            setEditingListing(null);
+            loadDashboardData();
+            alert("Listing updated successfully!");
+        } catch (err) {
+            alert("Failed to update listing");
+        }
+    };
+
     const handleUpdateStatus = async (reqId, status) => {
         try {
             if (status === 'accept') await api.put(`/requests/${reqId}/accept`);
@@ -862,6 +886,62 @@ const DashboardPage = () => {
                     </span>
                     Manage Your Listings & Incoming Requests
                 </h2>
+
+                {/* Edit Modal */}
+                {editingListing && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setEditingListing(null)}></div>
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-2xl p-8 relative z-10 animate-in fade-in zoom-in duration-200 border border-white/20">
+                            <h3 className="text-2xl font-bold text-slate-900 mb-6">Edit Listing</h3>
+                            <form onSubmit={handleUpdateListing} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">Title</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full border-slate-200 rounded-xl p-3 border focus:ring-primary focus:border-primary"
+                                        value={editingListing.title}
+                                        onChange={e => setEditingListing({...editingListing, title: e.target.value})}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">Price ($)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        className="w-full border-slate-200 rounded-xl p-3 border focus:ring-primary focus:border-primary"
+                                        value={editingListing.price}
+                                        onChange={e => setEditingListing({...editingListing, price: e.target.value})}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">Category</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full border-slate-200 rounded-xl p-3 border focus:ring-primary focus:border-primary"
+                                        value={editingListing.category}
+                                        onChange={e => setEditingListing({...editingListing, category: e.target.value})}
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
+                                    <textarea
+                                        required
+                                        rows="3"
+                                        className="w-full border-slate-200 rounded-xl p-3 border focus:ring-primary focus:border-primary"
+                                        value={editingListing.description}
+                                        onChange={e => setEditingListing({...editingListing, description: e.target.value})}
+                                    ></textarea>
+                                </div>
+                                <div className="md:col-span-2 flex space-x-3 pt-4">
+                                    <button type="button" onClick={() => setEditingListing(null)} className="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50">Cancel</button>
+                                    <button type="submit" className="flex-1 py-3 px-4 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark shadow-lg shadow-primary/30">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
                 
                 {myListings.length === 0 ? (
                     <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-12 text-center">
@@ -879,9 +959,29 @@ const DashboardPage = () => {
                                             <h3 className="font-bold text-slate-900 text-lg">{l.title}</h3>
                                             <p className="text-sm text-slate-500">{l.category} • ${l.price}</p>
                                         </div>
-                                        <span className={`text-xs uppercase font-bold px-3 py-1 rounded-full ${l.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                                            {l.status}
-                                        </span>
+                                        <div className="flex items-center space-x-2">
+                                            <button 
+                                                onClick={() => setEditingListing(l)}
+                                                className="p-2 text-slate-400 hover:text-primary transition-colors"
+                                                title="Edit Listing"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDeleteListing(l.id)}
+                                                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                                                title="Delete Listing"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                            <span className={`text-xs uppercase font-bold px-3 py-1 rounded-full ${l.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                {l.status}
+                                            </span>
+                                        </div>
                                     </div>
                                     
                                     <div className="p-5 flex-1">
