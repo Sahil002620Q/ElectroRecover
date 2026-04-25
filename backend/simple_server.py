@@ -150,16 +150,21 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
             conn.row_factory = sqlite3.Row
             c = conn.cursor()
             
-            sql = "SELECT * FROM listings WHERE 1=1"
+            sql = """
+                SELECT l.*, u.name as seller_name, u.phone as seller_phone 
+                FROM listings l 
+                JOIN users u ON l.seller_id = u.id 
+                WHERE 1=1
+            """
             params = []
             if category:
-                sql += " AND category LIKE ?"
+                sql += " AND l.category LIKE ?"
                 params.append(f"%{category}%")
             if condition:
-                sql += " AND condition = ?"
+                sql += " AND l.condition = ?"
                 params.append(condition)
                 
-            sql += " ORDER BY created_at DESC"
+            sql += " ORDER BY l.created_at DESC"
             c.execute(sql, params)
             listings = [dict(row) for row in c.fetchall()]
             # Add photos array (fake for now or parsed)
@@ -176,7 +181,13 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
             conn = sqlite3.connect(DB_FILE, timeout=10)
             conn.row_factory = sqlite3.Row
             c = conn.cursor()
-            c.execute("SELECT * FROM buy_requests WHERE buyer_id=?", (user['id'],))
+            c.execute('''
+                SELECT br.*, l.title as listing_title, u.name as seller_name, u.phone as seller_phone
+                FROM buy_requests br
+                JOIN listings l ON br.listing_id = l.id
+                JOIN users u ON l.seller_id = u.id
+                WHERE br.buyer_id=?
+            ''', (user['id'],))
             requests = [dict(row) for row in c.fetchall()]
             conn.close()
             self.send_json(requests)
@@ -191,9 +202,10 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
             c = conn.cursor()
             # Join with users to get buyer info
             c.execute('''
-                SELECT br.*, u.name as buyer_name, u.email as buyer_email, u.phone as buyer_phone, u.location as buyer_location
+                SELECT br.*, u.name as buyer_name, u.email as buyer_email, u.phone as buyer_phone, u.location as buyer_location, l.title as listing_title
                 FROM buy_requests br
                 JOIN users u ON br.buyer_id = u.id
+                JOIN listings l ON br.listing_id = l.id
                 WHERE br.seller_id=?
             ''', (user['id'],))
             requests = [dict(row) for row in c.fetchall()]

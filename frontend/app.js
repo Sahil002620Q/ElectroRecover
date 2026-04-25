@@ -228,20 +228,32 @@ const ListingCard = ({ listing, onRequest, isRequested }) => {
                 </div>
 
                 {listing.status === 'active' && (
-                    <button
-                        onClick={() => !isRequested && onRequest(listing.id)}
-                        disabled={isRequested}
-                        className={`w-full btn-animated py-2.5 rounded-xl border-2 font-bold transition-all ${isRequested 
-                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
-                            : listing.category.toLowerCase().includes('website')
-                                ? 'border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white'
-                                : 'border-primary text-primary hover:bg-primary hover:text-white'
-                            }`}
-                    >
-                        {isRequested 
-                            ? '✓ Request Sent' 
-                            : (listing.category.toLowerCase().includes('website') ? 'Get Ownership' : 'Request to Buy')}
-                    </button>
+                    <div className="space-y-2">
+                        <button
+                            onClick={() => !isRequested && onRequest(listing.id)}
+                            disabled={isRequested}
+                            className={`w-full btn-animated py-2.5 rounded-xl border-2 font-bold transition-all ${isRequested 
+                                ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                                : listing.category.toLowerCase().includes('website')
+                                    ? 'border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white'
+                                    : 'border-primary text-primary hover:bg-primary hover:text-white'
+                                }`}
+                        >
+                            {isRequested 
+                                ? '✓ Request Sent' 
+                                : (listing.category.toLowerCase().includes('website') ? 'Get Ownership' : 'Request to Buy')}
+                        </button>
+                        
+                        {listing.seller_phone && (
+                            <a 
+                                href={`https://wa.me/${listing.seller_phone.replace(/\D/g, '')}?text=Hi, I am interested in your listing: ${listing.title}`}
+                                target="_blank"
+                                className="w-full flex items-center justify-center space-x-2 bg-[#25D366] text-white py-2.5 rounded-xl font-bold hover:bg-[#128C7E] shadow-md transition-all"
+                            >
+                                <span>💬</span> <span>WhatsApp Seller</span>
+                            </a>
+                        )}
+                    </div>
                 )}
             </div>
         </div>
@@ -809,114 +821,195 @@ const DashboardPage = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
-            <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold text-slate-900">Seller Dashboard</h1>
+                <div className="flex space-x-3">
+                    <button onClick={() => window.location.reload()} className="p-2 text-slate-400 hover:text-primary transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {/* Manage My Listings (Primary View) */}
+            <div className="mb-12">
+                <h2 className="text-xl font-bold mb-6 text-slate-800 flex items-center">
+                    <span className="bg-primary text-white p-1.5 rounded-lg mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                        </svg>
+                    </span>
+                    Manage Your Listings & Incoming Requests
+                </h2>
+                
+                {myListings.length === 0 ? (
+                    <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-12 text-center">
+                        <p className="text-slate-500 mb-4">You haven't posted any listings yet.</p>
+                        <button onClick={() => setPage('create-listing')} className="text-primary font-bold hover:underline">Create your first listing</button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {myListings.map(l => {
+                            const requestsForThisListing = incomingRequests.filter(r => r.listing_id === l.id);
+                            return (
+                                <div key={l.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-shadow">
+                                    <div className="p-5 bg-slate-50 border-b border-slate-100 flex justify-between items-start">
+                                        <div>
+                                            <h3 className="font-bold text-slate-900 text-lg">{l.title}</h3>
+                                            <p className="text-sm text-slate-500">{l.category} • ${l.price}</p>
+                                        </div>
+                                        <span className={`text-xs uppercase font-bold px-3 py-1 rounded-full ${l.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                                            {l.status}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="p-5 flex-1">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Requests</h4>
+                                            <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                                {requestsForThisListing.length} Total
+                                            </span>
+                                        </div>
+                                        
+                                        {requestsForThisListing.length === 0 ? (
+                                            <div className="py-4 text-center">
+                                                <p className="text-sm text-slate-400 italic">No buyer requests for this item yet.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {requestsForThisListing.map(req => (
+                                                    <div key={req.id} className="p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                                        <div className="flex justify-between items-start mb-3">
+                                                            <div className="flex items-center space-x-2">
+                                                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                                                                    {req.buyer_name ? req.buyer_name[0].toUpperCase() : 'B'}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold text-slate-800 text-sm">{req.buyer_name}</p>
+                                                                    <p className="text-[10px] text-slate-500">{req.buyer_location}</p>
+                                                                </div>
+                                                            </div>
+                                                            <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${req.status === 'pending' ? 'bg-amber-100 text-amber-600' : req.status === 'accepted' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                                                {req.status}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        <div className="flex flex-col space-y-2 mt-4">
+                                                            {req.status === 'pending' && (
+                                                                <div className="flex space-x-2">
+                                                                    <button 
+                                                                        onClick={() => handleUpdateStatus(req.id, 'accept')}
+                                                                        className="flex-1 bg-green-500 text-white text-xs font-bold py-2.5 rounded-lg hover:bg-green-600 shadow-sm transition-all"
+                                                                    >
+                                                                        Accept Request
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={() => handleUpdateStatus(req.id, 'reject')}
+                                                                        className="flex-1 bg-red-50 text-red-600 border border-red-100 bg-red-50 text-xs font-bold py-2.5 rounded-lg hover:bg-red-100 transition-all"
+                                                                    >
+                                                                        Reject
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                            
+                                                            {req.buyer_phone ? (
+                                                                <a 
+                                                                    href={`https://wa.me/${req.buyer_phone.replace(/\D/g, '')}`} 
+                                                                    target="_blank" 
+                                                                    className="w-full flex items-center justify-center space-x-2 bg-[#25D366] text-white py-2.5 rounded-lg font-bold text-xs hover:bg-[#128C7E] shadow-sm transition-all"
+                                                                >
+                                                                    <span>💬</span> <span>WhatsApp Buyer</span>
+                                                                </a>
+                                                            ) : (
+                                                                <a 
+                                                                    href={`mailto:${req.buyer_email}`} 
+                                                                    className="w-full flex items-center justify-center space-x-2 bg-slate-100 text-slate-600 py-2.5 rounded-lg font-bold text-xs hover:bg-slate-200 transition-all"
+                                                                >
+                                                                    <span>✉️</span> <span>Email Buyer</span>
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Incoming Requests (As Seller) */}
+                {/* Legacy Incoming View (Hidden if redundant, or keep for quick overview) */}
+                <div className="glass-panel p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 className="text-xl font-bold mb-4 text-slate-800">Recent Buyer Interest</h2>
+                    <div className="space-y-4">
+                        {incomingRequests.length === 0 ? (
+                            <p className="text-slate-500 italic text-sm">No requests yet.</p>
+                        ) : (
+                            incomingRequests.slice(0, 5).map(req => (
+                                <div key={req.id} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl transition-colors">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold">
+                                            {req.buyer_name ? req.buyer_name[0] : 'B'}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800">{req.buyer_name}</p>
+                                            <p className="text-[10px] text-slate-500">Interested in {req.listing_title}</p>
+                                        </div>
+                                    </div>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${req.status === 'pending' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>
+                                        {req.status}
+                                    </span>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Sent Requests (As Buyer) */}
                 <div className="glass-panel p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h2 className="text-xl font-bold mb-4 text-slate-800 flex items-center">
-                        <span className="mr-2"></span> Incoming Buy Requests
+                        <span className="bg-primary-light text-white p-1.5 rounded-lg mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
+                            </svg>
+                        </span>
+                        My Sent Requests
                     </h2>
-                    {incomingRequests.length === 0 ? (
-                        <p className="text-slate-500 italic">No incoming requests yet.</p>
+                    {sentRequests.length === 0 ? (
+                        <p className="text-slate-500 italic text-sm">You haven't made any buy requests.</p>
                     ) : (
                         <div className="space-y-4">
-                            {incomingRequests.map(req => (
+                            {sentRequests.map(req => (
                                 <div key={req.id} className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-                                                {req.buyer_name ? req.buyer_name[0].toUpperCase() : 'B'}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-slate-800">{req.buyer_name}</p>
-                                                <p className="text-xs text-slate-500">{req.buyer_location}</p>
-                                            </div>
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div>
+                                            <span className="font-bold text-slate-800">{req.listing_title || `Listing #${req.listing_id}`}</span>
+                                            <p className="text-xs text-slate-400">Sent on {new Date(req.created_at).toLocaleDateString()}</p>
                                         </div>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${req.status === 'pending' ? 'bg-amber-100 text-amber-700' : req.status === 'accepted' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${req.status === 'pending' ? 'bg-amber-100 text-amber-700' : req.status === 'accepted' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                             {req.status}
                                         </span>
                                     </div>
-
-                                    <div className="bg-slate-50 p-3 rounded-lg text-sm text-slate-600 mb-4">
-                                        <p>Wants to buy your listing <span className="font-semibold text-primary">#{req.listing_id}</span></p>
-                                        <p className="text-xs text-slate-400 mt-1">{new Date(req.created_at).toLocaleDateString()}</p>
-                                    </div>
-
-                                    {/* Contact Actions */}
-                                    <div className="flex flex-col space-y-2">
-                                        {req.buyer_phone && (
-                                            <a href={`https://wa.me/${req.buyer_phone.replace(/\D/g, '')}`} target="_blank" className="flex items-center justify-center space-x-2 w-full bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#128C7E] font-medium transition-colors">
-                                                <span>💬</span> <span>Chat on WhatsApp</span>
-                                            </a>
-                                        )}
-                                        <div className="flex space-x-2">
-                                            <a href={`mailto:${req.buyer_email}`} className="flex-1 flex items-center justify-center space-x-1 bg-slate-100 text-slate-700 py-2 rounded-lg hover:bg-slate-200 text-sm font-medium transition-colors">
-                                                <span>✉️</span> <span>Email</span>
-                                            </a>
-                                            {req.buyer_phone && (
-                                                <a href={`tel:${req.buyer_phone}`} className="flex-1 flex items-center justify-center space-x-1 bg-slate-100 text-slate-700 py-2 rounded-lg hover:bg-slate-200 text-sm font-medium transition-colors">
-                                                    <span>📞</span> <span>Call</span>
-                                                </a>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {req.status === 'pending' && (
-                                        <div className="mt-4 pt-3 border-t border-slate-100 flex space-x-3">
-                                            <button onClick={() => handleUpdateStatus(req.id, 'accept')} className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 font-medium text-sm">Accept</button>
-                                            <button onClick={() => handleUpdateStatus(req.id, 'reject')} className="flex-1 bg-red-100 text-red-600 py-2 rounded-lg hover:bg-red-200 font-medium text-sm">Reject</button>
-                                        </div>
+                                    
+                                    {req.seller_phone && (
+                                        <a 
+                                            href={`https://wa.me/${req.seller_phone.replace(/\D/g, '')}`} 
+                                            target="_blank" 
+                                            className="mt-2 flex items-center justify-center space-x-2 w-full bg-[#25D366] text-white py-2.5 rounded-lg hover:bg-[#128C7E] text-xs font-bold shadow-sm transition-all"
+                                        >
+                                            <span>💬</span> <span>WhatsApp Seller</span>
+                                        </a>
                                     )}
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
-
-                {/* Sent Requests (As Buyer) */}
-                <div className="glass-panel p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h2 className="text-xl font-bold mb-4 text-slate-800 flex items-center">
-                        <span className="mr-2"></span> My Sent Requests
-                    </h2>
-                    {sentRequests.length === 0 ? (
-                        <p className="text-slate-500 italic">You haven't made any requests.</p>
-                    ) : (
-                        <div className="space-y-4">
-                            {sentRequests.map(req => (
-                                <div key={req.id} className="bg-white p-4 rounded-xl border border-slate-100 flex justify-between items-center hover:shadow-sm">
-                                    <div>
-                                        <span className="font-bold text-slate-700">Listing #{req.listing_id}</span>
-                                        <p className="text-xs text-slate-400">{new Date(req.created_at).toLocaleDateString()}</p>
-                                    </div>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${req.status === 'pending' ? 'bg-amber-100 text-amber-700' : req.status === 'accepted' ? 'bg-green-100 text-green-700' : 'bg-slate-100'}`}>
-                                        {req.status}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* My Listings */}
-            <div className="mt-8 glass-panel p-6 rounded-2xl shadow-sm border border-slate-200">
-                <h2 className="text-xl font-bold mb-6 text-slate-800">📦 My Listings</h2>
-                {myListings.length === 0 ? (
-                    <p className="text-gray-500">No listings active.</p>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {myListings.map(l => (
-                            <div key={l.id} className="border p-4 rounded-md">
-                                <h3 className="font-medium">{l.title}</h3>
-                                <div className="flex justify-between mt-2 text-sm text-gray-600">
-                                    <span>${l.price}</span>
-                                    <span>{l.status}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
             </div>
         </div>
     );
