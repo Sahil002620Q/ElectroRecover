@@ -73,3 +73,48 @@ def get_all_users(
 ):
     users = db.query(models.User).all()
     return users
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: int,
+    current_user: models.User = Depends(require_role([models.UserRole.ADMIN])),
+    db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    # Cascade delete is handled by relationships if configured, but let's be safe
+    db.query(models.Listing).filter(models.Listing.seller_id == user_id).delete()
+    db.delete(user)
+    db.commit()
+    return None
+
+@router.delete("/listings/{listing_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_listing_admin(
+    listing_id: int,
+    current_user: models.User = Depends(require_role([models.UserRole.ADMIN])),
+    db: Session = Depends(get_db)
+):
+    listing = db.query(models.Listing).filter(models.Listing.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
+    
+    db.delete(listing)
+    db.commit()
+    return None
+
+@router.post("/users/{user_id}/pay-commission")
+def mark_commission_paid(
+    user_id: int,
+    current_user: models.User = Depends(require_role([models.UserRole.ADMIN])),
+    db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    user.has_unpaid_commission = False
+    user.commission_due = 0.0
+    db.commit()
+    return {"status": "success", "message": "Commission marked as paid"}

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, Enum, ForeignKey, DateTime, Text, ARRAY
+from sqlalchemy import Column, String, Integer, Float, Enum, ForeignKey, DateTime, Text, ARRAY, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -37,6 +37,10 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.BUYER)
     location = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Commission System
+    commission_due = Column(Float, default=0.0)
+    has_unpaid_commission = Column(Boolean, default=False)
     
     # Relationships
     listings = relationship("Listing", back_populates="seller", foreign_keys="Listing.seller_id")

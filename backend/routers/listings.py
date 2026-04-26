@@ -58,6 +58,13 @@ def create_listing(
     current_user: models.User = Depends(require_role([models.UserRole.SELLER, models.UserRole.ADMIN])),
     db: Session = Depends(get_db)
 ):
+    # Check for unpaid commission
+    if current_user.has_unpaid_commission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You have an unpaid commission of ${current_user.commission_due:.2f}. Please pay it to continue selling."
+        )
+
     new_listing = models.Listing(
         **listing_data.dict(),
         seller_id=current_user.id

@@ -78,6 +78,13 @@ def accept_request(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    # Check for unpaid commission
+    if current_user.has_unpaid_commission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You have an unpaid commission of ${current_user.commission_due:.2f}. Please pay it to continue accepting requests."
+        )
+
     buy_request = db.query(models.BuyRequest).filter(models.BuyRequest.id == request_id).first()
     if not buy_request:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Request not found")
@@ -135,6 +142,13 @@ def complete_request(
     listing = db.query(models.Listing).filter(models.Listing.id == buy_request.listing_id).first()
     if listing:
         listing.status = models.ListingStatus.SOLD
+        
+        # Calculate 15% commission for the seller
+        commission = listing.price * 0.15
+        seller = db.query(models.User).filter(models.User.id == listing.seller_id).first()
+        if seller:
+            seller.commission_due += commission
+            seller.has_unpaid_commission = True
     
     db.commit()
     db.refresh(buy_request)

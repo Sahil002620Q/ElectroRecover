@@ -22,6 +22,8 @@ class UserResponse(UserBase):
     id: int
     role: UserRole
     created_at: datetime
+    commission_due: float
+    has_unpaid_commission: bool
     
     class Config:
         from_attributes = True
