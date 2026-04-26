@@ -591,7 +591,7 @@ const CreateListingPage = ({ setPage }) => {
     const [formData, setFormData] = useState({
         title: '', category: '', brand: '', model: '',
         condition: 'broken', price: '', location: '', description: '',
-        working_parts: ''
+        working_parts: '', photos: ''
     });
 
     const handleSubmit = async (e) => {
@@ -600,7 +600,7 @@ const CreateListingPage = ({ setPage }) => {
             await api.post('/listings/', {
                 ...formData,
                 price: parseFloat(formData.price),
-                photos: [] // Placeholder for now
+                photos: formData.photos ? [formData.photos] : []
             });
             alert('Listing created!');
             setPage('dashboard');
@@ -674,6 +674,13 @@ const CreateListingPage = ({ setPage }) => {
                     </div>
                 </div>
 
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Product Image URL</label>
+                    <input type="text" className="w-full border p-2 rounded" placeholder="https://example.com/image.jpg"
+                        value={formData.photos} onChange={e => setFormData({ ...formData, photos: e.target.value })} />
+                    <p className="text-xs text-gray-500 mt-1">Provide a link to a clean, minimal image of your item.</p>
+                </div>
+
                 <div className="pt-4">
                     <button type="submit" className="w-full bg-primary text-white py-3 rounded-md hover:bg-blue-600 font-bold">
                         Post Listing
@@ -691,7 +698,7 @@ const CreateWebsiteListingPage = ({ setPage }) => {
     const [formData, setFormData] = useState({
         title: '', category: 'Website', website_url: '',
         monthly_revenue: '', monthly_traffic: '', tech_stack: '',
-        price: '', location: '', description: ''
+        price: '', location: '', description: '', photos: ''
     });
 
     const handleSubmit = async (e) => {
@@ -703,7 +710,7 @@ const CreateWebsiteListingPage = ({ setPage }) => {
                 monthly_revenue: parseFloat(formData.monthly_revenue),
                 monthly_traffic: parseInt(formData.monthly_traffic),
                 condition: 'used', // Default for websites
-                photos: []
+                photos: formData.photos ? [formData.photos] : []
             });
             alert('Website listing created!');
             setPage('dashboard');
@@ -777,6 +784,13 @@ const CreateWebsiteListingPage = ({ setPage }) => {
                             placeholder="Remote / Global"
                             value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} />
                     </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">Website Preview Image URL</label>
+                    <input type="text" className="w-full rounded-xl border-gray-200 shadow-sm p-3 focus:ring-primary focus:border-primary border"
+                        placeholder="https://example.com/preview.jpg"
+                        value={formData.photos} onChange={e => setFormData({ ...formData, photos: e.target.value })} />
                 </div>
 
                 <div className="pt-4 space-y-3">

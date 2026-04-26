@@ -6,12 +6,11 @@ from database import engine, Base
 from routers import auth, listings, requests, admin
 from contextlib import asynccontextmanager
 
-# Async Database Initialization
+# Database Initialization
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        # Create all tables
-        await conn.run_sync(Base.metadata.create_all)
+    # Create all tables synchronously on startup
+    Base.metadata.create_all(bind=engine)
     yield
 
 app = FastAPI(
