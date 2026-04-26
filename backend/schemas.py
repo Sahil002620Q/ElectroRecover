@@ -14,6 +14,11 @@ class UserCreate(UserBase):
     password: str
     role: UserRole = UserRole.BUYER
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    location: Optional[str] = None
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str

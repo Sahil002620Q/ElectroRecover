@@ -220,6 +220,58 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json(user)
             return
 
+        # API: Admin Stats
+        if path == "/admin/stats":
+            user = self.get_user_from_token()
+            if not user or user['role'] != 'admin':
+                self.send_error(403, "Admin access only")
+                return
+            conn = sqlite3.connect(DB_FILE, timeout=10)
+            c = conn.cursor()
+            c.execute("SELECT COUNT(*) FROM users")
+            total_users = c.fetchone()[0]
+            c.execute("SELECT COUNT(*) FROM listings")
+            total_listings = c.fetchone()[0]
+            c.execute("SELECT COUNT(*) FROM buy_requests WHERE status='completed'")
+            total_completed = c.fetchone()[0]
+            conn.close()
+            self.send_json({
+                "total_users": total_users,
+                "total_listings": total_listings,
+                "total_completed": total_completed
+            })
+            return
+
+        # API: Admin Users
+        if path == "/admin/users":
+            user = self.get_user_from_token()
+            if not user or user['role'] != 'admin':
+                self.send_error(403, "Admin access only")
+                return
+            conn = sqlite3.connect(DB_FILE, timeout=10)
+            conn.row_factory = sqlite3.Row
+            c = conn.cursor()
+            c.execute("SELECT id, name, email, role, location, phone FROM users")
+            users = [dict(row) for row in c.fetchall()]
+            conn.close()
+            self.send_json(users)
+            return
+
+        # API: Admin Listings
+        if path == "/admin/listings":
+            user = self.get_user_from_token()
+            if not user or user['role'] != 'admin':
+                self.send_error(403, "Admin access only")
+                return
+            conn = sqlite3.connect(DB_FILE, timeout=10)
+            conn.row_factory = sqlite3.Row
+            c = conn.cursor()
+            c.execute("SELECT id, title, status, price FROM listings")
+            listings = [dict(row) for row in c.fetchall()]
+            conn.close()
+            self.send_json(listings)
+            return
+
         self.send_error(404)
 
     def do_POST(self):
@@ -311,26 +363,127 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(500, str(e))
 
     def do_PUT(self):
-        parsed = urlparse(self.path)
-        path = parsed.path
-        
-        # API: Accept/Reject Request
-        if path.startswith("/requests/"):
+        try:
+            length = int(self.headers.get('Content-Length', 0))
+            body = json.loads(self.rfile.read(length)) if length > 0 else {}
+            parsed = urlparse(self.path)
+            path = parsed.path
+            
+            # API: Update Profile
+            if path == "/auth/me":
+                user = self.get_user_from_token()
+                if not user: return
+                
+                conn = sqlite3.connect(DB_FILE, timeout=10)
+                c = conn.cursor()
+                
+                updates = []
+                params = []
+                if 'name' in body:
+                    updates.append("name=?")
+                    params.append(body['name'])
+                if 'phone' in body:
+                    updates.append("phone=?")
+                    params.append(body['phone'])
+                if 'location' in body:
+                    updates.append("location=?")
+                    params.append(body['location'])
+                
+                if not updates:
+                    conn.close()
+                    self.send_json(user)
+                    return
+                
+                params.append(user['id'])
+                sql = f"UPDATE users SET {', '.join(updates)} WHERE id=?"
+                c.execute(sql, params)
+                conn.commit()
+                
+                # Fetch updated user
+                c.execute("SELECT * FROM users WHERE id=?", (user['id'],))
+                updated_user = dict(sqlite3.Row(c, c.fetchone()))
+                del updated_user['password_hash']
+                conn.close()
+                self.send_json(updated_user)
+                return
+
+            # API: Admin Verify Payment
+            if path.startswith("/admin/verify-payment/"):
+                admin_user = self.get_user_from_token()
+                if not admin_user or admin_user['role'] != 'admin':
+                    self.send_error(403, "Admin access only")
+                    return
+                
+                user_id = int(parts[2])
+                conn = sqlite3.connect(DB_FILE, timeout=10)
+                c = conn.cursor()
+                # Here we just clear the commission status or mark as paid
+                # For simplicity, we just delete completed requests for this user? 
+                # No, let's just mark the user as having no commission due.
+                # Since we don't have a formal commission table yet, let's just clear requests.
+                c.execute("UPDATE buy_requests SET commission_status='paid' WHERE seller_id=? AND status='completed'", (user_id,))
+                conn.commit()
+                conn.close()
+                self.send_json({"id": user_id, "verified": True})
+                return
+
+            # API: Accept/Reject Request
+            if path.startswith("/requests/"):
+                user = self.get_user_from_token()
+                if not user: return
+                parts = path.strip("/").split("/")
+                req_id = int(parts[1])
+                action = parts[2] # accept/reject
+                
+                status = "accepted" if action == "accept" else "rejected"
+                
+                conn = sqlite3.connect(DB_FILE, timeout=10)
+                c = conn.cursor()
+                c.execute("UPDATE buy_requests SET status=? WHERE id=?", (status, req_id))
+                conn.commit()
+                conn.close()
+                self.send_json({"id": req_id, "status": status})
+                return
+        except Exception as e:
+            print(f"PUT Error: {e}")
+            self.send_error(500, str(e))
+
+    def do_DELETE(self):
+        try:
+            parsed = urlparse(self.path)
+            path = parsed.path
             user = self.get_user_from_token()
-            if not user: return
+            if not user or user['role'] != 'admin':
+                self.send_error(403, "Admin access only")
+                return
+
             parts = path.strip("/").split("/")
-            req_id = int(parts[1])
-            action = parts[2] # accept/reject
             
-            status = "accepted" if action == "accept" else "rejected"
-            
-            conn = sqlite3.connect(DB_FILE, timeout=10)
-            c = conn.cursor()
-            c.execute("UPDATE buy_requests SET status=? WHERE id=?", (status, req_id))
-            conn.commit()
-            conn.close()
-            self.send_json({"id": req_id, "status": status})
-            return
+            # API: Admin Delete User
+            if path.startswith("/admin/users/"):
+                user_id = int(parts[2])
+                conn = sqlite3.connect(DB_FILE, timeout=10)
+                c = conn.cursor()
+                c.execute("DELETE FROM users WHERE id=?", (user_id,))
+                conn.commit()
+                conn.close()
+                self.send_json({"id": user_id, "deleted": True})
+                return
+
+            # API: Admin Delete Listing
+            if path.startswith("/admin/listings/"):
+                listing_id = int(parts[2])
+                conn = sqlite3.connect(DB_FILE, timeout=10)
+                c = conn.cursor()
+                c.execute("DELETE FROM listings WHERE id=?", (listing_id,))
+                conn.commit()
+                conn.close()
+                self.send_json({"id": listing_id, "deleted": True})
+                return
+                
+        except Exception as e:
+            print(f"DELETE Error: {e}")
+            self.send_error(500, str(e))
 
     def send_json(self, data):
         self.send_response(200)
@@ -362,7 +515,7 @@ class MarketplaceHandler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     init_db()
-    # os.chdir(os.path.dirname(os.path.abspath(__file__))) - Removed to avoid CWD confusion
+    socketserver.TCPServer.allow_reuse_address = True
     server = socketserver.TCPServer(("", PORT), MarketplaceHandler)
     print(f"Serving at http://localhost:{PORT}")
     server.serve_forever()

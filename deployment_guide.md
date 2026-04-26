@@ -1,4 +1,4 @@
-# 🚀 Deployment Guide: ElectroRecover
+# 🚀 Deployment Guide: AssetSwap
 
 Follow these steps to deploy your application to **Render** (Backend) and **Vercel** (Frontend).
 
