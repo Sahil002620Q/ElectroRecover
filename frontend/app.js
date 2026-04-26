@@ -95,7 +95,7 @@ const Navbar = ({ setPage, darkMode, setDarkMode, openProfile }) => {
                 <div className="flex justify-between h-16 items-center">
                     <div className="flex cursor-pointer items-center" onClick={() => navigate('home')}>
                         <span className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-dark">
-                            ElectroRecover
+                            AssetSwap
                         </span>
                     </div>
 
@@ -116,7 +116,7 @@ const Navbar = ({ setPage, darkMode, setDarkMode, openProfile }) => {
                                     <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Settings</p>
                                     </div>
-                                    
+
                                     <button
                                         onClick={() => setDarkMode(!darkMode)}
                                         className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
@@ -151,7 +151,7 @@ const Navbar = ({ setPage, darkMode, setDarkMode, openProfile }) => {
                                     )}
 
                                     <div className="border-t border-slate-100 dark:border-slate-800 my-1"></div>
-                                    
+
                                     {user ? (
                                         <button
                                             onClick={handleLogout}
@@ -174,7 +174,7 @@ const Navbar = ({ setPage, darkMode, setDarkMode, openProfile }) => {
                         </div>
 
                         {user ? (
-                             <button
+                            <button
                                 onClick={() => navigate('dashboard')}
                                 className="hidden md:flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-all"
                             >
@@ -216,14 +216,14 @@ const Navbar = ({ setPage, darkMode, setDarkMode, openProfile }) => {
 
 const ListingCard = ({ listing, onRequest, isRequested }) => {
     const defaultImage = "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=500&q=80"; // Default electronics parts image
-    
+
     return (
         <div className="btn-animated bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl group">
             <div className="h-48 bg-slate-100 flex items-center justify-center relative overflow-hidden">
-                <img 
-                    src={(listing.photos && listing.photos.length > 0) ? listing.photos[0] : defaultImage} 
-                    alt={listing.title} 
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                <img
+                    src={(listing.photos && listing.photos.length > 0) ? listing.photos[0] : defaultImage}
+                    alt={listing.title}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute top-3 right-3">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm ${listing.status === 'active' ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'}`}>
@@ -393,7 +393,7 @@ const HomePage = ({ setPage }) => {
                 </div>
             )}
 
-            <ConfirmationModal 
+            <ConfirmationModal
                 isOpen={!!confirmListing}
                 onClose={() => setConfirmListing(null)}
                 onConfirm={confirmBuy}
@@ -532,7 +532,7 @@ const CreateListingPage = ({ setPage }) => {
                     value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
                 <input type="text" placeholder="Location" required className="w-full border dark:border-slate-700 dark:bg-slate-800 p-3 rounded-xl"
                     value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} />
-                
+
                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 dark:border-slate-700 border-dashed rounded-xl cursor-pointer">
                     <input type="file" accept="image/*" onChange={async (e) => {
                         const file = e.target.files[0];
@@ -594,7 +594,7 @@ const CommissionPopup = ({ amount, onCancel }) => {
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Commission Due</h2>
                 <p className="text-slate-500 dark:text-slate-400 mb-6">
-                    You have an unpaid commission of <span className="font-bold text-slate-900 dark:text-white">${amount.toFixed(2)}</span>. 
+                    You have an unpaid commission of <span className="font-bold text-slate-900 dark:text-white">${amount.toFixed(2)}</span>.
                     Please pay to unlock selling features.
                 </p>
                 <div className="bg-slate-100 dark:bg-slate-800 p-6 rounded-2xl mb-6">
@@ -661,7 +661,7 @@ const AdminPanel = () => {
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
             <h1 className="text-4xl font-black mb-8 dark:text-white">Admin Central</h1>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                 <div className="bg-primary p-6 rounded-3xl text-white shadow-xl">
                     <p className="text-primary-light font-bold uppercase text-xs">Total Users</p>
@@ -760,7 +760,7 @@ const DashboardPage = () => {
         <div className="max-w-7xl mx-auto px-4 py-8">
             {showCommission && <CommissionPopup amount={user.commission_due} onCancel={() => setShowCommission(false)} />}
             <h1 className="text-3xl font-bold mb-8 dark:text-white">Dashboard</h1>
-            
+
             <div className="grid grid-cols-1 gap-8">
                 {myListings.map(l => (
                     <div key={l.id} className="glass-panel p-6 rounded-3xl">
@@ -838,41 +838,41 @@ const ProfileUpdateModal = ({ isOpen, onClose, user, setUser }) => {
                         </svg>
                     </button>
                 </div>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
                         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
-                        <input 
-                            type="text" 
-                            required 
+                        <input
+                            type="text"
+                            required
                             className="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 focus:ring-primary focus:border-primary border dark:text-white"
-                            value={formData.name} 
-                            onChange={e => setFormData({ ...formData, name: e.target.value })} 
+                            value={formData.name}
+                            onChange={e => setFormData({ ...formData, name: e.target.value })}
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Phone Number</label>
-                        <input 
-                            type="tel" 
-                            required 
+                        <input
+                            type="tel"
+                            required
                             className="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 focus:ring-primary focus:border-primary border dark:text-white"
-                            value={formData.phone} 
-                            onChange={e => setFormData({ ...formData, phone: e.target.value })} 
+                            value={formData.phone}
+                            onChange={e => setFormData({ ...formData, phone: e.target.value })}
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Location</label>
-                        <input 
-                            type="text" 
-                            required 
+                        <input
+                            type="text"
+                            required
                             className="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 focus:ring-primary focus:border-primary border dark:text-white"
-                            value={formData.location} 
-                            onChange={e => setFormData({ ...formData, location: e.target.value })} 
+                            value={formData.location}
+                            onChange={e => setFormData({ ...formData, location: e.target.value })}
                         />
                     </div>
-                    
-                    <button 
-                        type="submit" 
+
+                    <button
+                        type="submit"
                         disabled={loading}
                         className="w-full bg-primary text-white py-3.5 rounded-xl font-bold hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all disabled:opacity-50"
                     >
@@ -911,11 +911,11 @@ const MainLayout = ({ page, setPage, darkMode, setDarkMode }) => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black text-slate-900 dark:text-white font-sans transition-colors duration-300">
-            <Navbar 
-                setPage={setPage} 
-                darkMode={darkMode} 
-                setDarkMode={setDarkMode} 
-                openProfile={() => setIsProfileModalOpen(true)} 
+            <Navbar
+                setPage={setPage}
+                darkMode={darkMode}
+                setDarkMode={setDarkMode}
+                openProfile={() => setIsProfileModalOpen(true)}
             />
             <main>
                 {page === 'home' && <HomePage setPage={setPage} />}
@@ -926,13 +926,13 @@ const MainLayout = ({ page, setPage, darkMode, setDarkMode }) => {
                 {page === 'dashboard' && <DashboardPage />}
                 {page === 'admin' && <AdminPanel />}
             </main>
-            
+
             {user && (
-                <ProfileUpdateModal 
-                    isOpen={isProfileModalOpen} 
-                    onClose={() => setIsProfileModalOpen(false)} 
-                    user={user} 
-                    setUser={setUser} 
+                <ProfileUpdateModal
+                    isOpen={isProfileModalOpen}
+                    onClose={() => setIsProfileModalOpen(false)}
+                    user={user}
+                    setUser={setUser}
                 />
             )}
         </div>
