@@ -27,7 +27,7 @@
 ---
 
 ## 🛠️ Analysis & Features
-After analyzing the **ElectroRecover** repo, I've mapped the core architecture to match your "Dark Eco" theme:
+
 
 * **⚡ High-Speed API**: Built with **FastAPI**, ensuring your device listings load instantly.
 * **🌿 Eco-Centric UI**: The frontend uses a dark aesthetic to reduce eye strain and emphasize sustainability.
